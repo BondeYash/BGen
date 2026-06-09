@@ -1,5 +1,7 @@
 package com.banking.platform.customer;
 
+import com.banking.platform.account.AccountNotFoundException;
+import com.banking.platform.account.InvalidAccountStateException;
 import com.banking.platform.customer.CustomerNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,4 +49,15 @@ public class GlobalExceptionHandler {
         body.put("error", message);
         return ResponseEntity.status(status).body(body);
     }
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleAccountNotFound(AccountNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());        // 404
+    }
+
+    @ExceptionHandler(InvalidAccountStateException.class)
+    public ResponseEntity<Map<String, String>> handleAccountState(InvalidAccountStateException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());         // 409
+    }
+
+
 }

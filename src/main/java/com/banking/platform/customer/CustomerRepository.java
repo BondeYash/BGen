@@ -20,6 +20,8 @@ public interface CustomerRepository extends JpaRepository<Customer , UUID> {
 
     Optional<Customer> findByIdAndTenantId (UUID id , UUID tenantId);
 
+    boolean existsByIdAndTenantId (UUID id , UUID tenantId);
+
     boolean existsByTenantIdAndEmail(UUID tenantId , String email);
 
     @Query(value = "SELECT nextval('customer_number_seq')" , nativeQuery = true)
