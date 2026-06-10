@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record AccountResponse (
         UUID id,
-        String account_number,
+        String accountNumber,
         UUID customerId,
         AccountType type,
         AccountStatus status,

@@ -1,5 +1,6 @@
 package com.banking.platform.account;
 
+import com.banking.platform.transaction.InSufficientFundException;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -99,6 +100,35 @@ public class Account {
             throw new InvalidAccountStateException("Cannot close an account with a non-zero balance");
         }
         this.status = AccountStatus.CLOSED;
+    }
+
+    public void credit(BigDecimal amount) {
+        requireActive();
+        requirePositive(amount);
+        this.balance = this.balance.add(amount);          // money in
+    }
+
+    public void debit(BigDecimal amount) {
+        requireActive();
+        requirePositive(amount);
+        if (this.balance.compareTo(amount) < 0) {         // not enough?
+            throw new InSufficientFundException(
+                    "Balance " + this.balance + " is less than requested " + amount);
+        }
+        this.balance = this.balance.subtract(amount);     // money out
+    }
+
+    private void requireActive() {
+        if (this.status != AccountStatus.ACTIVE) {
+            throw new InvalidAccountStateException(
+                    "Account is " + this.status + "; money operations require ACTIVE");
+        }
+    }
+
+    private void requirePositive(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
     }
 
     // ---- getters only. NO setters. ----

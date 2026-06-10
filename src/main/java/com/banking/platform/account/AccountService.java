@@ -1,10 +1,12 @@
 package com.banking.platform.account;
 
 import com.banking.platform.account.dto.AccountOpenRequest;
+import com.banking.platform.account.dto.AccountStatusRequest;
 import com.banking.platform.customer.CustomerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,7 +24,7 @@ public class AccountService {
     @Transactional
     public AccountResponse open (UUID tenantId , AccountOpenRequest request) {
         if (!customerRepository.existsByIdAndTenantId(request.customerId() , tenantId)) {
-            throw new AccountNotFoundException("Customer Not Found in these tenant");
+            throw new AccountNotFoundException("Customer not found in this tenant");
         }
 
         String currency = request.currency() == null ? "INR" : request.currency();
@@ -38,13 +40,39 @@ public class AccountService {
 
     }
 
-    @Transactional
-    public AccountResponse get (UUID id , UUID tenantId) {
+    @Transactional(readOnly = true)
+    public AccountResponse get (UUID tenantId , UUID id) {
         Account acc = accountRepository.findByIdAndTenantId(id , tenantId)
-                .orElseThrow(() ->  new AccountNotFoundException("Account Failed to Fetch"));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found: " + id));
 
         return toResponse(acc);
     }
+
+    @Transactional(readOnly = true)
+    public List<AccountResponse> listByCustomer (UUID tenantId , UUID customerId) {
+        return accountRepository.findByTenantIdAndCustomerId(tenantId , customerId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+    }
+
+    @Transactional
+    public AccountResponse changeStatus(UUID tenantId, UUID id, AccountStatusRequest request) {
+        Account account = accountRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found: " + id));
+
+        switch (request.action()) {
+            case FREEZE   -> account.freeze();
+            case UNFREEZE -> account.unfreeze();
+            case CLOSE    -> account.close();
+        }
+
+        return toResponse(account);
+    }
+
+
+
 
 
 

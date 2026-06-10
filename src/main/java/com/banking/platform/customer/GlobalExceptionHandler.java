@@ -3,6 +3,9 @@ package com.banking.platform.customer;
 import com.banking.platform.account.AccountNotFoundException;
 import com.banking.platform.account.InvalidAccountStateException;
 import com.banking.platform.customer.CustomerNotFoundException;
+import com.banking.platform.transaction.CurrencyMismatchException;
+import com.banking.platform.transaction.DuplicateTransactionException;
+import com.banking.platform.transaction.InSufficientFundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -57,6 +60,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidAccountStateException.class)
     public ResponseEntity<Map<String, String>> handleAccountState(InvalidAccountStateException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());         // 409
+    }
+
+    @ExceptionHandler(InSufficientFundException.class)
+    public ResponseEntity<Map<String, String>> handleInsufficientFund (InSufficientFundException ex) {
+        return build (HttpStatus.CONFLICT , ex.getMessage());
+    }
+
+    @ExceptionHandler(CurrencyMismatchException.class)
+    public ResponseEntity<Map<String,String>> handlecurrencyMismatch (CurrencyMismatchException ex) {
+        return build(HttpStatus.NOT_ACCEPTABLE , ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateTransactionException.class)
+    public ResponseEntity<Map<String, String>> handleduplicatetransaction (DuplicateTransactionException ex) {
+        return build(HttpStatus.NOT_ACCEPTABLE , ex.getMessage());
     }
 
 
