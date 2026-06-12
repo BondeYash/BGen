@@ -19,7 +19,7 @@ public class LedgerController {
         this.service = service;
     }
 
-    @GetMapping("/balance")
+    @GetMapping("/{accountId}/balance")
     public ResponseEntity<Map<String, BigDecimal>> balance(
             @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID accountId) {
@@ -27,7 +27,7 @@ public class LedgerController {
         return ResponseEntity.ok(Map.of("derivedBalance", derived));
     }
 
-    @GetMapping("/reconcile")
+    @GetMapping("/{accountId}/reconcile")
     public ResponseEntity<ReconciliationResponse> reconcile(
             @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID accountId) {
