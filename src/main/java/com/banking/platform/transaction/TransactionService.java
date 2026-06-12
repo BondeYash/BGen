@@ -3,6 +3,10 @@ package com.banking.platform.transaction;
 import com.banking.platform.account.Account;
 import com.banking.platform.account.AccountNotFoundException;
 import com.banking.platform.account.AccountRepository;
+import com.banking.platform.ledger.EntryDirection;
+import com.banking.platform.ledger.LedgerAccounts;
+import com.banking.platform.ledger.LedgerPosting;
+import com.banking.platform.ledger.LedgerRepository;
 import com.banking.platform.transaction.dto.RecordTransactionRequest;
 import com.banking.platform.transaction.dto.TransactionResponse;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -11,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -18,10 +24,14 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final LedgerRepository ledgerRepository;
 
-    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository) {
+    public TransactionService(TransactionRepository transactionRepository,
+                              AccountRepository accountRepository,
+                              LedgerRepository ledgerRepository) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
+        this.ledgerRepository = ledgerRepository;
     }
 
     @Transactional
@@ -56,15 +66,48 @@ public class TransactionService {
                 account.getCurrency(), account.getBalance(), idempotencyKey, request.description());
 
         // 6) SAVE NOW (flush) so the UNIQUE receipt-number rule fires inside this method.
+        Transaction saved;
         try {
-            Transaction saved = transactionRepository.saveAndFlush(txn);
-            return toResponse(saved);
+            saved = transactionRepository.saveAndFlush(txn);
         } catch (DataIntegrityViolationException race) {
             // Two identical requests at the SAME instant: the other won the unique key.
             // Nothing we did is kept (this transaction rolls back) — tell the client to retry.
             throw new DuplicateTransactionException(
                     "Idempotency-Key already used; retry to get the original result.");
         }
+
+        // 7) POST THE DOUBLE-ENTRY LEDGER — balanced legs, SAME transaction, SAME @Transactional.
+        postLedger(tenantId, saved, account);
+
+        return toResponse(saved);
+    }
+
+    /**
+     * Write the two balanced ledger legs for this money move.
+     * Liability rule: the customer account is a liability of the bank.
+     *   DEPOSIT    -> CREDIT customer (owe more), DEBIT  BANK_CASH (asset up)
+     *   WITHDRAWAL -> DEBIT  customer (owe less), CREDIT BANK_CASH (asset down)
+     * Sums to zero by construction; LedgerPosting refuses anything that doesn't.
+     */
+    private void postLedger(UUID tenantId, Transaction txn, Account account) {
+        String customerRef = account.getId().toString();
+        String currency    = account.getCurrency();
+        BigDecimal amount  = txn.getAmount();
+
+        EntryDirection customerDir;
+        EntryDirection bankDir;
+        switch (txn.getType()) {
+            case DEPOSIT    -> { customerDir = EntryDirection.CREDIT; bankDir = EntryDirection.DEBIT;  }
+            case WITHDRAWAL -> { customerDir = EntryDirection.DEBIT;  bankDir = EntryDirection.CREDIT; }
+            default -> throw new IllegalStateException("Unhandled type: " + txn.getType());
+        }
+
+        LedgerPosting posting = LedgerPosting.balanced(List.of(
+                new LedgerPosting.Leg(LedgerAccounts.BANK_CASH, bankDir,     amount, currency),
+                new LedgerPosting.Leg(customerRef,              customerDir, amount, currency)
+        ));
+
+        ledgerRepository.saveAll(posting.toEntries(tenantId, txn.getId()));
     }
 
     private TransactionResponse toResponse(Transaction t) {
