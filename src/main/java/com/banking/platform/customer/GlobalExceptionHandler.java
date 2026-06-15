@@ -67,15 +67,17 @@ public class GlobalExceptionHandler {
         return build (HttpStatus.CONFLICT , ex.getMessage());
     }
 
-    @ExceptionHandler(CurrencyMismatchException.class)
-    public ResponseEntity<Map<String,String>> handlecurrencyMismatch (CurrencyMismatchException ex) {
-        return build(HttpStatus.NOT_ACCEPTABLE , ex.getMessage());
-    }
 
     @ExceptionHandler(DuplicateTransactionException.class)
     public ResponseEntity<Map<String, String>> handleduplicatetransaction (DuplicateTransactionException ex) {
         return build(HttpStatus.NOT_ACCEPTABLE , ex.getMessage());
     }
+    @ExceptionHandler(CurrencyMismatchException.class)
+    public ResponseEntity<Map<String,String>> handlecurrencyMismatch (CurrencyMismatchException ex) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY , ex.getMessage());   // was NOT_ACCEPTABLE (406) -> 422
+    }
+
+
 
 
 }
