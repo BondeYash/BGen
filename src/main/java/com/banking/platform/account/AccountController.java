@@ -1,5 +1,6 @@
 package com.banking.platform.account;
 
+import com.banking.platform.common.TenantContext;
 import com.banking.platform.account.dto.AccountOpenRequest;
 import com.banking.platform.account.dto.AccountStatusRequest;
 import jakarta.validation.Valid;
@@ -22,9 +23,9 @@ public class AccountController {
 
    @PostMapping
     public ResponseEntity<AccountResponse> openAccount (
-           @RequestHeader("X-Tenant-Id")UUID tenantId,
            @Valid @RequestBody AccountOpenRequest request
            ) {
+       UUID tenantId = TenantContext.getTenantId();
        AccountResponse created =  service.open(tenantId , request);
        URI location = URI.create("/api/v1/accounts/" + created.id());
 
@@ -34,27 +35,27 @@ public class AccountController {
 
     @GetMapping("/{id}")
     public ResponseEntity<AccountResponse> get(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID id
     ) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.get(tenantId, id));
     }
 
     // List one customer's accounts: /api/v1/accounts?customerId={uuid}
     @GetMapping
     public ResponseEntity<List<AccountResponse>> listByCustomer(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestParam UUID customerId
     ) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.listByCustomer(tenantId, customerId));
     }
 
     @PostMapping("/{id}/status")
     public ResponseEntity<AccountResponse> changeStatus (
-            @RequestHeader("X-Tenant-Id")UUID tenantId,
             @PathVariable UUID id,
             @Valid @RequestBody AccountStatusRequest request
             ) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.changeStatus(tenantId , id , request));
     }
 

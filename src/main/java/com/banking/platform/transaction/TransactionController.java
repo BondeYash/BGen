@@ -1,6 +1,7 @@
 package com.banking.platform.transaction;
 
 
+import com.banking.platform.common.TenantContext;
 import com.banking.platform.transaction.dto.RecordTransactionRequest;
 import com.banking.platform.transaction.dto.TransactionResponse;
 import jakarta.validation.Valid;
@@ -26,12 +27,12 @@ public class TransactionController {
 
     @PostMapping
     public ResponseEntity<TransactionResponse> record (
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @PathVariable UUID accountId,
             @Valid @RequestBody RecordTransactionRequest request
 
             ){
+        UUID tenantId = TenantContext.getTenantId();
         TransactionResponse created = service.record(tenantId, accountId, idempotencyKey, request);
         URI location = URI.create("/api/v1/accounts/" + accountId + "/transactions/" + created.id());
         return ResponseEntity.created(location).body(created);
@@ -39,10 +40,10 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<Page<TransactionResponse>> list(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID accountId,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.list(tenantId, accountId, pageable));
     }
 }

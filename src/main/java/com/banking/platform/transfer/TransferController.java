@@ -1,5 +1,6 @@
 package com.banking.platform.transfer;
 
+import com.banking.platform.common.TenantContext;
 import com.banking.platform.transfer.dto.TransferRequest;
 import com.banking.platform.transfer.dto.TransferResponse;
 import jakarta.validation.Valid;
@@ -21,10 +22,10 @@ public class TransferController {
 
     @PostMapping
     public ResponseEntity<TransferResponse> transfer(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody TransferRequest request) {
 
+        UUID tenantId = TenantContext.getTenantId();
         TransferResponse response = transferService.transfer(tenantId, idempotencyKey, request);
         return ResponseEntity
                 .created(URI.create("/api/v1/transfers/" + response.id()))

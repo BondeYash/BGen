@@ -1,6 +1,7 @@
 package com.banking.platform.customer;
 
 
+import com.banking.platform.common.TenantContext;
 import com.banking.platform.customer.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -25,9 +26,9 @@ public class CustomerController {
 
     @PostMapping
     public ResponseEntity<CustomerResponse> create (
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @Valid @RequestBody CreateCustomerRequest request
             ) {
+        UUID tenantId = TenantContext.getTenantId();
         CustomerResponse created = service.create(tenantId , request);
          URI location = URI.create("/api/v1/customers/" + created.id());
 
@@ -36,38 +37,38 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponse> get (
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID id
     ) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.get(tenantId , id));
     }
 
     @GetMapping
     public ResponseEntity<Page<CustomerSummaryResponse>> list(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String customerNumber,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.list(tenantId, name, customerNumber, pageable));
     }
 
 
     @PatchMapping("/{id}")
     public ResponseEntity<CustomerResponse> update (
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID id,
             @Valid @RequestBody UpdateCustomerRequest request
             ) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.update(tenantId , id , request));
     }
 
     @PostMapping("/{id}/status")
     public ResponseEntity<CustomerResponse> changeStatus (
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID id,
             @Valid @RequestBody ChangeStatusRequest request
     ){
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.changeStatus(tenantId , id , request));
     }
 

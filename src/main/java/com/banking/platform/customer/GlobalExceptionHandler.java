@@ -8,6 +8,7 @@ import com.banking.platform.transaction.DuplicateTransactionException;
 import com.banking.platform.transaction.InSufficientFundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -76,6 +77,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String,String>> handlecurrencyMismatch (CurrencyMismatchException ex) {
         return build(HttpStatus.UNPROCESSABLE_ENTITY , ex.getMessage());   // was NOT_ACCEPTABLE (406) -> 422
     }
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<Map<String,String>> handleBadCreds(BadCredentialsException ex) {
+        return build(HttpStatus.UNAUTHORIZED, ex.getMessage());     // 401
+    }
+
+
 
 
 

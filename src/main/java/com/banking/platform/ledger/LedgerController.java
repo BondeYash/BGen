@@ -1,6 +1,7 @@
 package com.banking.platform.ledger;
 
 
+import com.banking.platform.common.TenantContext;
 import com.banking.platform.ledger.dto.ReconciliationResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,16 +22,16 @@ public class LedgerController {
 
     @GetMapping("/{accountId}/balance")
     public ResponseEntity<Map<String, BigDecimal>> balance(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID accountId) {
+        UUID tenantId = TenantContext.getTenantId();
         BigDecimal derived = service.deriveBalance(tenantId, accountId);
         return ResponseEntity.ok(Map.of("derivedBalance", derived));
     }
 
     @GetMapping("/{accountId}/reconcile")
     public ResponseEntity<ReconciliationResponse> reconcile(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @PathVariable UUID accountId) {
+        UUID tenantId = TenantContext.getTenantId();
         return ResponseEntity.ok(service.reconcile(tenantId, accountId));
     }
 }
