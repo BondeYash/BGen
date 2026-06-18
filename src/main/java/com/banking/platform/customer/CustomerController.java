@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -24,6 +25,7 @@ public class CustomerController {
         this.service = service;
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @PostMapping
     public ResponseEntity<CustomerResponse> create (
             @Valid @RequestBody CreateCustomerRequest request
@@ -35,6 +37,7 @@ public class CustomerController {
          return ResponseEntity.created(location).body(created);
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponse> get (
             @PathVariable UUID id
@@ -43,6 +46,7 @@ public class CustomerController {
         return ResponseEntity.ok(service.get(tenantId , id));
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @GetMapping
     public ResponseEntity<Page<CustomerSummaryResponse>> list(
             @RequestParam(required = false) String name,
@@ -54,6 +58,7 @@ public class CustomerController {
     }
 
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<CustomerResponse> update (
             @PathVariable UUID id,
@@ -63,6 +68,7 @@ public class CustomerController {
         return ResponseEntity.ok(service.update(tenantId , id , request));
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @PostMapping("/{id}/status")
     public ResponseEntity<CustomerResponse> changeStatus (
             @PathVariable UUID id,

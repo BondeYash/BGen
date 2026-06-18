@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -25,6 +26,7 @@ public class TransactionController {
         this.service = service;
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @PostMapping
     public ResponseEntity<TransactionResponse> record (
             @RequestHeader("Idempotency-Key") String idempotencyKey,
@@ -38,6 +40,7 @@ public class TransactionController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @GetMapping
     public ResponseEntity<Page<TransactionResponse>> list(
             @PathVariable UUID accountId,

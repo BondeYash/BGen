@@ -5,6 +5,7 @@ import com.banking.platform.transfer.dto.TransferRequest;
 import com.banking.platform.transfer.dto.TransferResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -20,6 +21,7 @@ public class TransferController {
         this.transferService = transferService;
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @PostMapping
     public ResponseEntity<TransferResponse> transfer(
             @RequestHeader("Idempotency-Key") String idempotencyKey,

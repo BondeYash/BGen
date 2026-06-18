@@ -5,6 +5,7 @@ import com.banking.platform.account.dto.AccountOpenRequest;
 import com.banking.platform.account.dto.AccountStatusRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -21,6 +22,7 @@ public class AccountController {
        this.service = service;
    }
 
+   @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
    @PostMapping
     public ResponseEntity<AccountResponse> openAccount (
            @Valid @RequestBody AccountOpenRequest request
@@ -33,6 +35,7 @@ public class AccountController {
 
    }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<AccountResponse> get(
             @PathVariable UUID id
@@ -42,6 +45,7 @@ public class AccountController {
     }
 
     // List one customer's accounts: /api/v1/accounts?customerId={uuid}
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @GetMapping
     public ResponseEntity<List<AccountResponse>> listByCustomer(
             @RequestParam UUID customerId
@@ -50,6 +54,7 @@ public class AccountController {
         return ResponseEntity.ok(service.listByCustomer(tenantId, customerId));
     }
 
+    @PreAuthorize("hasAnyRole('TELLER','MANAGER','ADMIN')")
     @PostMapping("/{id}/status")
     public ResponseEntity<AccountResponse> changeStatus (
             @PathVariable UUID id,
